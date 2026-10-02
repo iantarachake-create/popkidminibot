@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: popkid-minibot
+    runtime: node
+    region: frankfurt          # closest to the Supabase eu-west-1 (Ireland) database
+    plan: free                 # free sleeps after ~15 min idle (bots go offline). Use "starter" for 24/7.
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
