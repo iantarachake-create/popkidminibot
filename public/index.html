@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Popkid Mini Bot — Link your WhatsApp</title>
+<style>
+  :root{--bg:#120508;--red:#d4202f;--gold:#f2c14e;--text:#fbeee6;--muted:#c9a9a0;--glass:rgba(255,255,255,.07);--line:rgba(242,193,78,.25)}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--text);
+    background:radial-gradient(900px 500px at 15% -10%,rgba(212,32,47,.45),transparent 60%),
+               radial-gradient(700px 500px at 100% 110%,rgba(242,193,78,.18),transparent 60%),var(--bg)}
+  .card{width:100%;max-width:440px;padding:28px 24px;border-radius:22px;background:var(--glass);
+    border:1px solid var(--line);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    box-shadow:0 20px 60px rgba(0,0,0,.45)}
+  h1{margin:0 0 4px;font-size:1.5rem;letter-spacing:.3px}
+  h1 span{color:var(--gold)}
+  p.sub{margin:0 0 20px;color:var(--muted);font-size:.93rem;line-height:1.45}
+  label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:6px}
+  input{width:100%;padding:14px 16px;font-size:1.05rem;color:var(--text);background:rgba(0,0,0,.35);
+    border:1px solid var(--line);border-radius:14px;outline:none}
+  input:focus{border-color:var(--gold)}
+  button{width:100%;margin-top:14px;padding:14px;font-size:1rem;font-weight:700;color:#2a0a0d;border:0;
+    border-radius:14px;cursor:pointer;background:linear-gradient(135deg,var(--gold),#e8a93a)}
+  button:disabled{opacity:.6;cursor:wait}
+  .hint{font-size:.78rem;color:var(--muted);margin-top:8px}
+  .err{margin-top:14px;padding:10px 12px;border-radius:12px;background:rgba(212,32,47,.2);
+    border:1px solid rgba(212,32,47,.5);font-size:.9rem;display:none}
+  .box{display:none;margin-top:6px;text-align:center}
+  .code{font-size:2.3rem;font-weight:800;letter-spacing:6px;color:var(--gold);padding:16px 8px;margin:14px 0 6px;
+    border-radius:16px;background:rgba(0,0,0,.35);border:1px dashed var(--line);user-select:all}
+  ol{text-align:left;color:var(--muted);font-size:.9rem;line-height:1.6;padding-left:20px;margin:14px 0 0}
+  .copy{background:transparent;color:var(--gold);border:1px solid var(--line);margin-top:8px;padding:10px}
+  .ok{font-size:1.1rem;font-weight:700;color:#7ee2a8}
+  .pill{margin-top:20px;text-align:center;font-size:.78rem;color:var(--muted)}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#7ee2a8;margin-right:6px}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Popkid <span>Mini Bot</span></h1>
+  <p class="sub">Link your WhatsApp in under a minute. No session ID, no QR scan — just your number.</p>
+
+  <div id="form">
+    <label for="num">WhatsApp number (with country code)</label>
+    <input id="num" type="tel" inputmode="numeric" autocomplete="tel" placeholder="2547XXXXXXXX">
+    <div class="hint">Digits only — no “+”, spaces or leading zeros.</div>
+    <button id="go">Get pairing code</button>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div class="box" id="codeBox">
+    <div>Your pairing code</div>
+    <div class="code" id="code">----</div>
+    <button class="copy" id="copy">Copy code</button>
+    <ol>
+      <li>Open WhatsApp → <b>Settings → Linked devices</b></li>
+      <li>Tap <b>Link a device</b> → <b>Link with phone number instead</b></li>
+      <li>Enter the code above. This page updates by itself.</li>
+    </ol>
+  </div>
+
+  <div class="box" id="done">
+    <div class="ok">✅ Connected!</div>
+    <p class="sub" style="margin-top:10px">Your bot is live. Open WhatsApp — you'll get a welcome message.<br>Send <b>.menu</b> to see commands.</p>
+  </div>
+
+  <div class="pill"><span class="dot"></span><span id="stats">…</span></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let poll = null;
+
+function showErr(msg){ const e=$('err'); e.textContent=msg; e.style.display=msg?'block':'none'; }
+
+async function loadStats(){
+  try{ const r=await (await fetch('/api/stats')).json(); $('stats').textContent=r.online+' bot'+(r.online===1?'':'s')+' online'; }
+  catch{ $('stats').textContent=''; }
+}
+loadStats(); setInterval(loadStats, 30000);
+
+$('go').onclick = async () => {
+  showErr('');
+  const number = $('num').value.replace(/\D/g,'');
+  if (number.length < 8) return showErr('Enter your full number with country code.');
+  $('go').disabled = true; $('go').textContent = 'Requesting code…';
+  try{
+    const res = await fetch('/api/pair',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({number})});
+    const data = await res.json();
+    if(!res.ok || !data.ok) throw new Error(data.error || 'Something went wrong');
+    $('code').textContent = data.code;
+    $('form').style.display='none'; $('codeBox').style.display='block';
+    startPolling(number);
+  }catch(e){
+    showErr(e.message);
+  }finally{
+    $('go').disabled=false; $('go').textContent='Get pairing code';
+  }
+};
+
+$('copy').onclick = async () => {
+  try{ await navigator.clipboard.writeText($('code').textContent.replace('-','')); $('copy').textContent='Copied ✓'; }
+  catch{ $('copy').textContent='Select & copy manually'; }
+  setTimeout(()=>$('copy').textContent='Copy code',2000);
+};
+
+function startPolling(number){
+  clearInterval(poll);
+  const started = Date.now();
+  poll = setInterval(async () => {
+    try{
+      const r = await (await fetch('/api/status/'+number)).json();
+      if(r.status==='open'){
+        clearInterval(poll);
+        $('codeBox').style.display='none'; $('done').style.display='block'; loadStats();
+      } else if(r.status==='none' || Date.now()-started > 4*60*1000){
+        clearInterval(poll);
+        $('codeBox').style.display='none'; $('form').style.display='block';
+        showErr('The code expired. Please request a new one.');
+      }
+    }catch{}
+  }, 3000);
+}
+</script>
+</body>
+</html>
