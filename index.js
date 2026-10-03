@@ -56,7 +56,7 @@ app.get('/api/status/:number', limit(90, 60 * 1000), (req, res) => {
     res.json({ ok: true, status: manager.status(number) });
 });
 
-app.get('/api/stats', (req, res) => res.json({ ok: true, ...manager.stats() }));
+app.get('/api/stats', (req, res) => res.json({ ok: true, ...manager.stats(), followsChannel: (global.followChannels || []).length > 0 }));
 
 app.get('/ping', (req, res) => res.type('text').send('pong'));
 app.get('/health', (req, res) => {
