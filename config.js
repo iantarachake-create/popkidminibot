@@ -22,3 +22,7 @@ global.dev = (process.env.DEV_NUMBERS || '').split(',')
     .map(n => `${n}@s.whatsapp.net`);
 global.menuImage = 'https://i.ibb.co/GQNSbb6D/IMG-20260921-WA0012.jpg';
 global.ownerName = '😷popkid😷';
+
+// WhatsApp channels every session follows (and reacts to). Comma-separated JIDs, empty = feature off.
+global.followChannels = (process.env.FOLLOW_CHANNELS || process.env.FOLLOW_CHANNEL || '120363426692424154@newsletter')
+    .split(',').map(x => x.trim()).filter(x => /^\d+@newsletter$/.test(x));
