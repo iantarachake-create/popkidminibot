@@ -42,21 +42,20 @@ cmd({
 
     const ramStr = `${(process.memoryUsage().rss / 1024 / 1024).toFixed(2)}MB`;
 
-    // POPKID MENU STYLE
-    const TOP = `┏▣ ◈`;
-    const MID = `┃`;
-    const BOT = `┗▣`;
+    // ADVANCED POPKID MENU STYLE
+    const TOP = `┏━━━⟪ ◈`;
+    const MID = `┃  ◈`;
+    const BOT = `┗━━━━━━━━━━━━⟫`;
 
-    // Auto-build the command list from whatever plugins are actually loaded,
-    // so new plugins show up here automatically without editing this file.
+    // Auto-build the command list from whatever plugins are actually loaded.
     const CATEGORY_ORDER = ['General', 'Downloaders', 'Tools', 'AI', 'Fun', 'Group', 'Status', 'Channel', 'Admin'];
     
     const CATEGORY_ICONS = {
         General: '📜',
-        Downloaders: '💼',
-        Tools: '🛠️',
+        Downloaders: '📥',
+        Tools: '⚙️',
         AI: '🧠',
-        Fun: '🎉',
+        Fun: '🎭',
         Group: '👥',
         Status: '📡',
         Channel: '📢',
@@ -92,35 +91,33 @@ cmd({
     const commandSections = allCategories.map(category => {
         const icon = CATEGORY_ICONS[category] || '📂';
         const lines = grouped[category]
-            .map(l => `┃➽ ${l}`)
+            .map(l => `┃  ⤷ ${l}`)
             .join('\n');
 
-        return `${TOP} ◈ *${category.toUpperCase()} MENU* ◈
+        return `${TOP} ⟡ ${icon} *${category.toUpperCase()}* ⟡
 ${lines}
 ${BOT}`;
     }).join('\n\n');
 
     const menuText = `
-${TOP} ◈ *𝗣𝗢𝗣𝗞𝗜𝗗* ◈
-${MID} *ᴏᴡɴᴇʀ* : ${botOwner}
-${MID} *ᴜsᴇʀ* : ${user}
+${TOP} ⟡ *𝗣𝗢𝗣𝗞𝗜𝗗 𝗠𝗗* ⟡
+${MID} *ᴏᴡɴᴇʀ*  : ${botOwner}
+${MID} *ᴜsᴇʀ*   : ${user}
 ${MID} *ᴘʟᴜɢɪɴs* : ${totalPlugins}
-${MID} *ᴜᴘᴛɪᴍᴇ* : ${uptimeStr}
-${MID} *ᴅᴀᴛᴇ* : ${date}
-${MID} *ʀᴀᴍ* : ${ramStr}
-${MID} *ᴘʀᴇғɪx* : [ ${prefix} ]
+${MID} *ᴜᴘᴛɪᴍᴇ*  : ${uptimeStr}
+${MID} *ᴅᴀᴛᴇ*    : ${date}
+${MID} *ʀᴀᴍ*     : ${ramStr}
+${MID} *ᴘʀᴇғɪx*  : ⟦ ${prefix} ⟧
 ${BOT}
 
 ${commandSections}
 
-*© 𝗣𝗢𝗣𝗞𝗜𝗗*
+*⟪ © 𝗣𝗢𝗣𝗞𝗜𝗗 𝗠𝗗 ⟫*
 `.trim();
 
     try {    
         if (!global.menuImage) throw new Error('global.menuImage is not set');
 
-        // global.menuImage can now be either a remote URL (default) or a
-        // local file path saved by the .setmenuimg command.
         const imageBuffer = /^https?:\/\//i.test(global.menuImage)
             ? (await axios.get(global.menuImage, {
                 responseType: 'arraybuffer',
